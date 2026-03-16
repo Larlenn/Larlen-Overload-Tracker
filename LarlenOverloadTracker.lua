@@ -160,11 +160,6 @@ local function HasBuff(id)
     return C_UnitAuras.GetPlayerAuraBySpellID(id) ~= nil
 end
 
-local function GetTooltipLine1()
-    local line = GameTooltipTextLeft1
-    return line and line:GetText()
-end
-
 local function SkinnableText()
     local locale = GetLocale()
     if     locale == "deDE" then return "Hautbar"
@@ -237,8 +232,11 @@ local function OnTooltipUpdate(_, arg1)
     for _, mod in ipairs(LOT.modules) do
         if mod._known and mod._inZone and db.modules[mod.id] ~= false then
             if mod.isSkinning then
-                local str = GameTooltipTextLeft4 and GameTooltipTextLeft4:GetText()
-                if str ~= nil and type(str) == "string" and str == SKINNABLE_TAG then
+                local ok, match = pcall(function()
+                    local str = GameTooltipTextLeft4 and GameTooltipTextLeft4:GetText()
+                    return str == SKINNABLE_TAG
+                end)
+                if ok and match then
                     local charges = GetReadyCharges(mod.spellID)
                     if charges >= 1 or HasBuff(mod.buffID) then
                         ShowIcon(mod, charges, 1)
@@ -246,13 +244,13 @@ local function OnTooltipUpdate(_, arg1)
                     end
                 end
             elseif mod.nameLookup then
-                local ok, str = pcall(GetTooltipLine1)
-                if ok and type(str) == "string" then
-                    local ok2, hit = pcall(rawget, mod.nameLookup, str)
-                    if ok2 and hit then
-                        local charges, maxCharges = GetReadyCharges(mod.spellID)
-                        if charges >= 1 then ShowIcon(mod, charges, maxCharges); return end
-                    end
+                local ok, hit = pcall(function()
+                    local str = GameTooltipTextLeft1 and GameTooltipTextLeft1:GetText()
+                    return rawget(mod.nameLookup, str)
+                end)
+                if ok and hit then
+                    local charges, maxCharges = GetReadyCharges(mod.spellID)
+                    if charges >= 1 then ShowIcon(mod, charges, maxCharges); return end
                 end
             else
                 local charges, maxCharges = GetReadyCharges(mod.spellID)

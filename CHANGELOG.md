@@ -1,5 +1,8 @@
 # Larlen Overload Tracker Changelog
 
+## v1.0.1
+- Fixed Lua errors caused by Blizzard's secret string type on tooltip lines in certain dungeons.
+
 ## v1.0.0 - Initial Release
 - Cursor-following icon that appears when mousing over an eligible overload node.
 - Supports Mining, Herbalism, and Skinning for Dragonflight, The War Within, and Midnight.
