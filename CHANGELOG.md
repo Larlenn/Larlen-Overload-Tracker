@@ -1,5 +1,8 @@
 # Larlen Overload Tracker Changelog
 
+## v1.0.2
+- Fixed Lua errors caused by secret number taint from C_Spell.GetSpellCharges in certain dungeon encounters.
+
 ## v1.0.1
 - Fixed Lua errors caused by Blizzard's secret string type on tooltip lines in certain dungeons.
 

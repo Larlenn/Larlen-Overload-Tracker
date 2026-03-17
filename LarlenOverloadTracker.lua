@@ -231,34 +231,34 @@ local function OnTooltipUpdate(_, arg1)
 
     for _, mod in ipairs(LOT.modules) do
         if mod._known and mod._inZone and db.modules[mod.id] ~= false then
-            if mod.isSkinning then
-                local ok, match = pcall(function()
+            local ok, triggered = pcall(function()
+                if mod.isSkinning then
                     local str = GameTooltipTextLeft4 and GameTooltipTextLeft4:GetText()
-                    return str == SKINNABLE_TAG
-                end)
-                if ok and match then
-                    local charges = GetReadyCharges(mod.spellID)
-                    if charges >= 1 or HasBuff(mod.buffID) then
-                        ShowIcon(mod, charges, 1)
-                        return
+                    if str == SKINNABLE_TAG then
+                        local charges = GetReadyCharges(mod.spellID)
+                        if charges >= 1 or HasBuff(mod.buffID) then
+                            ShowIcon(mod, charges, 1)
+                            return true
+                        end
+                    end
+                elseif mod.nameLookup then
+                    local str = GameTooltipTextLeft1 and GameTooltipTextLeft1:GetText()
+                    if rawget(mod.nameLookup, str) then
+                        local charges, maxCharges = GetReadyCharges(mod.spellID)
+                        if charges >= 1 then
+                            ShowIcon(mod, charges, maxCharges)
+                            return true
+                        end
+                    end
+                else
+                    local charges, maxCharges = GetReadyCharges(mod.spellID)
+                    if charges >= 1 then
+                        ShowIcon(mod, charges, maxCharges)
+                        return true
                     end
                 end
-            elseif mod.nameLookup then
-                local ok, hit = pcall(function()
-                    local str = GameTooltipTextLeft1 and GameTooltipTextLeft1:GetText()
-                    return rawget(mod.nameLookup, str)
-                end)
-                if ok and hit then
-                    local charges, maxCharges = GetReadyCharges(mod.spellID)
-                    if charges >= 1 then ShowIcon(mod, charges, maxCharges); return end
-                end
-            else
-                local charges, maxCharges = GetReadyCharges(mod.spellID)
-                if charges >= 1 then
-                    ShowIcon(mod, charges, maxCharges)
-                    return
-                end
-            end
+            end)
+            if ok and triggered then return end
         end
     end
 
