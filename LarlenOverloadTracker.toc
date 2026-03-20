@@ -2,7 +2,9 @@
 ## Title: Larlen Overload Tracker
 ## Notes: Shows the overload/sharpen icon on your cursor when mousing over an eligible elemental node. Mining, Herbalism, Skinning. DF, TWW, and Midnight.
 ## Author: Larlen
-## Version: 1.0.2
+## Version: 1.0.3
+## X-Curse-Project-ID: 1485808
+## X-Wago-ID: bGoyP160
 ## IconTexture: 4554453
 ## Category-enUS: Inventory
 ## Category-deDE: Inventar

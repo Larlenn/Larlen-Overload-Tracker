@@ -306,46 +306,44 @@ function LOT:InitializeOptions()
     panel:HookScript("OnShow", Refresh)
 end
 
+local _ldbData = {
+    type  = "launcher",
+    label = "Larlen Overload Tracker",
+    icon  = 4554453,
+    OnClick = function(_, btn)
+        if btn == "LeftButton" then
+            LOT.OpenOptions()
+        elseif btn == "RightButton" then
+            LOT.db.showMinimap = false
+            LOT:UpdateMinimapVisibility()
+            print("|cFF00FF7FLarlen Overload Tracker|r: Minimap hidden. /lot minimap to restore.")
+        end
+    end,
+    OnTooltipShow = function(tt)
+        tt:AddLine("Larlen Overload Tracker", 1, 0.82, 0)
+        tt:AddLine(" ")
+        tt:AddLine("|cFF00FF7FLeft-Click|r Open settings", 1, 1, 1)
+        tt:AddLine("|cFF00FF7FRight-Click|r Hide minimap button", 1, 1, 1)
+        tt:AddLine("|cFF00FF7FDrag|r Move button", 1, 1, 1)
+    end,
+}
+
+local _ldb = LibStub("LibDataBroker-1.1"):GetDataObjectByName("LarlenOverloadTracker")
+          or LibStub("LibDataBroker-1.1"):NewDataObject("LarlenOverloadTracker", _ldbData)
+if _ldb then
+    _ldb.OnClick       = _ldbData.OnClick
+    _ldb.OnTooltipShow = _ldbData.OnTooltipShow
+    _ldb.icon          = _ldbData.icon
+end
+
+LOT.ldbi = LibStub("LibDBIcon-1.0")
+LOT.ldb  = _ldb
+
 function LOT:InitializeMinimap()
-    local db = self.db
-
-    local ldbData = {
-        type  = "launcher",
-        label = "Larlen Overload Tracker",
-        icon  = 4554453,
-        OnClick = function(_, btn)
-            if btn == "LeftButton" then
-                LOT.OpenOptions()
-            elseif btn == "RightButton" then
-                db.showMinimap = false
-                LOT:UpdateMinimapVisibility()
-                print("|cFF00FF7FLarlen Overload Tracker|r: Minimap hidden. /lot minimap to restore.")
-            end
-        end,
-        OnTooltipShow = function(tt)
-            tt:AddLine("Larlen Overload Tracker", 1, 0.82, 0)
-            tt:AddLine(" ")
-            tt:AddLine("|cFF00FF7FLeft-Click|r Open settings", 1, 1, 1)
-            tt:AddLine("|cFF00FF7FRight-Click|r Hide minimap button", 1, 1, 1)
-            tt:AddLine("|cFF00FF7FDrag|r Move button", 1, 1, 1)
-        end,
-    }
-
-    local lib = LibStub("LibDataBroker-1.1")
-    local ldb = lib:GetDataObjectByName("LarlenOverloadTracker")
-            or  lib:NewDataObject("LarlenOverloadTracker", ldbData)
-    if ldb then
-        ldb.OnClick       = ldbData.OnClick
-        ldb.OnTooltipShow = ldbData.OnTooltipShow
-        ldb.icon          = ldbData.icon
+    if not LarlenOverloadTrackerDB.minimapPos then
+        LarlenOverloadTrackerDB.minimapPos = 225
     end
-
-    LOT.ldbi = LibStub("LibDBIcon-1.0")
-    LOT.ldb  = ldb
-
-    LarlenOverloadTrackerDB.minimapPos = LarlenOverloadTrackerDB.minimapPos or db.minimapPos or 225
-    LarlenOverloadTrackerDB.hide       = not db.showMinimap
-
+    LarlenOverloadTrackerDB.hide = not LOT.db.showMinimap
     C_Timer.After(0, function()
         if not LOT.ldbi:IsRegistered("LarlenOverloadTracker") then
             LOT.ldbi:Register("LarlenOverloadTracker", LOT.ldb, LarlenOverloadTrackerDB)

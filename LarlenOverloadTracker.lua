@@ -156,10 +156,6 @@ local function GetReadyCharges(id)
     return 1, 1
 end
 
-local function HasBuff(id)
-    return C_UnitAuras.GetPlayerAuraBySpellID(id) ~= nil
-end
-
 local function SkinnableText()
     local locale = GetLocale()
     if     locale == "deDE" then return "Hautbar"
@@ -236,7 +232,7 @@ local function OnTooltipUpdate(_, arg1)
                     local str = GameTooltipTextLeft4 and GameTooltipTextLeft4:GetText()
                     if str == SKINNABLE_TAG then
                         local charges = GetReadyCharges(mod.spellID)
-                        if charges >= 1 or HasBuff(mod.buffID) then
+                        if charges >= 1 then
                             ShowIcon(mod, charges, 1)
                             return true
                         end
