@@ -1,5 +1,8 @@
 # Larlen Overload Tracker Changelog
 
+## v1.0.4
+- Added node name lists for Dragonflight and The War Within mining and herbalism to prevent false positives on portals and other world objects.
+
 ## v1.0.3
 - Fixed skinning icon showing when Sharpen Your Knife buff is active but no charges remain.
 - Fixed minimap button not appearing in HidingBar and other broker addons.
