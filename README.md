@@ -2,7 +2,7 @@
 
 ## What Does It Do?
 
-Shows the Overload/Sharpen spell icon on your cursor the moment you mouse over an eligible gathering node. No more checking your buffs or spell book — if the icon is there, you have a charge ready to use.
+Shows the Overload/Sharpen spell icon on your cursor the moment you mouse over an eligible gathering node. No more checking your buffs or spell book - if the icon is there, you have a charge ready to use.
 
 Supports Mining, Herbalism, and Skinning across Midnight and previous expansions.
 
