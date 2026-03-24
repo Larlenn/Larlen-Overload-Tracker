@@ -1,5 +1,9 @@
 # Larlen Overload Tracker Changelog
 
+## v1.0.5
+- Expanded node lists for DF and TWW mining and herbalism to cover base nodes, rich nodes, and additional variants like Lush, Camouflaged, Webbed, and Empowered.
+- Fixed skinning icon staying up after using Sharpen Your Knife when no charges remain.
+
 ## v1.0.4
 - Added node name lists for Dragonflight and The War Within mining and herbalism to prevent false positives on portals and other world objects.
 
