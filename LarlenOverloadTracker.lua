@@ -4,7 +4,8 @@ local LOT = LarlenOverloadTracker
 local defaultDB = {
     iconSize     = 32,
     alpha        = 1.0,
-    showInCombat = true,
+    showInCombat     = true,
+    showInInstances  = true,
     showMinimap  = true,
     minimapPos   = 225,
     offsetX      = 0,
@@ -167,8 +168,11 @@ local db
 local SKINNABLE_TAG
 local lastShownMod
 local lastCX, lastCY
+local hideCheckTimer = 0
 local function RebuildZoneCache()
+    if select(2, IsInInstance()) ~= "none" then return end
     local mapID = C_Map.GetBestMapForUnit("player")
+    if not mapID then return end
     for _, mod in ipairs(LOT.modules) do
         if not mod.continentIDs then
             mod._inZone = true
@@ -277,15 +281,30 @@ function LOT:HideIcon()
 end
 
 local function OnTooltipUpdate(_, arg1)
+    if LOT.debugMode then
+        local parts = { "arg1=" .. tostring(arg1) }
+        if UnitExists("mouseover") then
+            parts[#parts+1] = "dead=" .. tostring(UnitIsDead("mouseover"))
+            parts[#parts+1] = "type=" .. tostring(UnitCreatureType("mouseover"))
+            parts[#parts+1] = "family=" .. tostring(UnitCreatureFamily("mouseover"))
+        else
+            parts[#parts+1] = "no-mouseover"
+        end
+        print("|cFFFFFF00LOT debug|r " .. table.concat(parts, " | "))
+    end
     if arg1 == 0 then LOT:HideIcon(); return end
     if not db.showInCombat and InCombatLockdown() then LOT:HideIcon(); return end
+    if not db.showInInstances and select(2, IsInInstance()) ~= "none" then LOT:HideIcon(); return end
 
     for _, mod in ipairs(LOT.modules) do
-        if mod._known and mod._inZone and db.modules[mod.id] ~= false then
+        if mod._known and mod._inZone ~= false and db.modules[mod.id] ~= false then
             local ok, triggered = pcall(function()
                 if mod.isSkinning then
-                    local str = GameTooltipTextLeft4 and GameTooltipTextLeft4:GetText()
-                    if str == SKINNABLE_TAG then
+                    if UnitExists("mouseover")
+                        and UnitIsDead("mouseover")
+                        and not UnitIsGhost("mouseover")
+                        and UnitCreatureFamily("mouseover") ~= nil
+                    then
                         local charges = GetReadyCharges(mod.spellID)
                         if charges >= 1 then
                             ShowIcon(mod, charges, 1)
@@ -293,7 +312,17 @@ local function OnTooltipUpdate(_, arg1)
                         end
                     end
                 elseif mod.nameLookup then
-                    local str = GameTooltipTextLeft1 and GameTooltipTextLeft1:GetText()
+                    local str
+                    local ok, val = pcall(function() return GameTooltipTextLeft1 and GameTooltipTextLeft1:GetText() end)
+                    if ok then
+                        str = val
+                    elseif C_TooltipInfo and C_TooltipInfo.GetObject then
+                        local tipData = C_TooltipInfo.GetObject("mouseover")
+                        if tipData and tipData.lines and tipData.lines[1] then
+                            local lineOk, lineVal = pcall(function() return tipData.lines[1].leftText end)
+                            if lineOk and type(lineVal) == "string" then str = lineVal end
+                        end
+                    end
                     if rawget(mod.nameLookup, str) then
                         local charges, maxCharges = GetReadyCharges(mod.spellID)
                         if charges >= 1 then
@@ -317,12 +346,23 @@ local function OnTooltipUpdate(_, arg1)
 end
 local trackFrame = CreateFrame("Frame")
 trackFrame:Hide()
-trackFrame:SetScript("OnUpdate", function()
-    if not (iconFrame and iconFrame:IsShown()) then return end
+trackFrame:SetScript("OnUpdate", function(_, elapsed)
+    if not (iconFrame and iconFrame:IsShown()) then
+        hideCheckTimer = 0
+        return
+    end
     local cx, cy = GetCursorPosition()
-    if cx == lastCX and cy == lastCY then return end
-    lastCX, lastCY = cx, cy
-    PositionIcon()
+    if cx ~= lastCX or cy ~= lastCY then
+        lastCX, lastCY = cx, cy
+        PositionIcon()
+    end
+    hideCheckTimer = hideCheckTimer + elapsed
+    if hideCheckTimer >= 0.15 then
+        hideCheckTimer = 0
+        if not UnitExists("mouseover") and not GameTooltip:IsShown() then
+            LOT:HideIcon()
+        end
+    end
 end)
 
 local pendingOpenOptions = false
@@ -367,7 +407,15 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1)
 
         local tooltipFrame = CreateFrame("Frame")
         tooltipFrame:RegisterEvent("WORLD_CURSOR_TOOLTIP_UPDATE")
-        tooltipFrame:SetScript("OnEvent", OnTooltipUpdate)
+        tooltipFrame:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
+        tooltipFrame:SetScript("OnEvent", function(self, event)
+            if event == "UPDATE_MOUSEOVER_UNIT" then
+                if not UnitExists("mouseover") then LOT:HideIcon() end
+            else
+                OnTooltipUpdate(self, event)
+            end
+        end)
+        GameTooltip:HookScript("OnHide", function() LOT:HideIcon() end)
 
         trackFrame:Show()
         LOT:InitializeOptions()
@@ -412,8 +460,29 @@ SlashCmdList["LARLENOVERLOADTRACKER"] = function(msg)
     elseif msg == "reset" then
         LarlenOverloadTrackerDB = nil
         ReloadUI()
+    elseif msg == "debugon" then
+        LOT.debugMode = true
+        print("|cFF00FF7FLarlen Overload Tracker|r: Live debug ON - hover over objects to see tooltip events.")
+    elseif msg == "debugoff" then
+        LOT.debugMode = false
+        print("|cFF00FF7FLarlen Overload Tracker|r: Live debug OFF.")
+    elseif msg == "debug" then
+        local inInst, instType = IsInInstance()
+        local mapID = C_Map.GetBestMapForUnit("player")
+        print("|cFF00FF7FLarlen Overload Tracker Debug|r")
+        print("  Instance: " .. tostring(inInst) .. " (" .. tostring(instType) .. ")  mapID: " .. tostring(mapID))
+        for _, mod in ipairs(LOT.modules) do
+            print("  [" .. mod.id .. "] known=" .. tostring(mod._known) .. " inZone=" .. tostring(mod._inZone) .. " enabled=" .. tostring(db.modules[mod.id]))
+        end
+        print("  Tooltip lines:")
+        for i = 1, 8 do
+            local fs = _G["GameTooltipTextLeft" .. i]
+            local txt = fs and fs:GetText()
+            if txt then print("    L" .. i .. ": " .. txt) end
+        end
+        print("  SKINNABLE_TAG='" .. tostring(SKINNABLE_TAG) .. "'")
     else
-        print("|cFF00FF7FLarlen Overload Tracker|r: /lot, /lot minimap, /lot reset")
+        print("|cFF00FF7FLarlen Overload Tracker|r: /lot, /lot minimap, /lot reset, /lot debug")
     end
 end
 

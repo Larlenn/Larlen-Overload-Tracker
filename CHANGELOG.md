@@ -1,5 +1,10 @@
 # Larlen Overload Tracker Changelog
 
+## v1.0.6
+- Fixed icon not showing in delves, dungeons, and raids. Blizzard restricts tooltip text reads inside instances, so skinning detection was rewritten to use unit APIs instead.
+- Fixed icon not disappearing when moving off a skinnable corpse inside an instance.
+- Added "Show icon in instances" toggle in the options panel for anyone who only wants the icon in the open world.
+
 ## v1.0.5
 - Expanded node lists for DF and TWW mining and herbalism to cover base nodes, rich nodes, and additional variants like Lush, Camouflaged, Webbed, and Empowered.
 - Fixed skinning icon staying up after using Sharpen Your Knife when no charges remain.
